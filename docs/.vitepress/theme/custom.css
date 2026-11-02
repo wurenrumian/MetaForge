@@ -1,0 +1,254 @@
+:root {
+  --vp-c-brand-1: #5b5bd6;
+  --vp-c-brand-2: #4f4fc4;
+  --vp-c-brand-3: #4343b0;
+  --vp-c-brand-soft: rgba(91, 91, 214, 0.14);
+
+  --vp-home-hero-name-color: transparent;
+  --vp-home-hero-name-background: linear-gradient(120deg, #5b5bd6 10%, #d9488b 55%, #f59e0b 95%);
+  --vp-home-hero-image-background-image: linear-gradient(
+    -45deg,
+    rgba(91, 91, 214, 0.28) 30%,
+    rgba(217, 72, 139, 0.22) 60%,
+    rgba(245, 158, 11, 0.18) 100%
+  );
+  --vp-home-hero-image-filter: blur(56px);
+
+  --vp-font-family-base: 'Inter', 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei',
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --vp-font-family-mono: 'JetBrains Mono', 'Cascadia Code', 'Fira Code', Consolas,
+    'Courier New', monospace;
+}
+
+.dark {
+  --vp-c-brand-1: #8b8bf0;
+  --vp-c-brand-2: #a0a0f5;
+  --vp-c-brand-3: #b5b5f9;
+  --vp-c-brand-soft: rgba(139, 139, 240, 0.16);
+}
+
+/* 正文排版：中文阅读更舒展 */
+.vp-doc p,
+.vp-doc li {
+  line-height: 1.8;
+}
+
+.vp-doc h2 {
+  margin-top: 2.6rem;
+  padding-bottom: 0.45rem;
+  border-bottom: 1px solid var(--vp-c-divider);
+}
+
+.vp-doc h3 {
+  margin-top: 2rem;
+}
+
+/* 首页 feature 卡片轻微悬浮 */
+.VPFeature {
+  transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.VPFeature:hover {
+  transform: translateY(-4px);
+  border-color: var(--vp-c-brand-1);
+  box-shadow: 0 14px 30px rgba(15, 23, 42, 0.08);
+}
+
+/* 自定义信息块 */
+.term-box {
+  border-left: 3px solid var(--vp-c-brand-1);
+  background: var(--vp-c-brand-soft);
+  border-radius: 8px;
+  padding: 14px 18px;
+  margin: 18px 0;
+}
+
+.term-box strong {
+  color: var(--vp-c-brand-1);
+}
+
+/* 章节导航卡片 */
+.chapter-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 14px;
+  margin: 24px 0;
+}
+
+.chapter-card {
+  display: block;
+  border: 1px solid var(--vp-c-divider);
+  border-radius: 12px;
+  padding: 16px 18px;
+  transition: border-color 0.2s ease, transform 0.2s ease, background 0.2s ease;
+}
+
+.chapter-card:hover {
+  border-color: var(--vp-c-brand-1);
+  background: var(--vp-c-brand-soft);
+  transform: translateY(-2px);
+}
+
+.chapter-card .no {
+  font-family: var(--vp-font-family-mono);
+  font-size: 12px;
+  color: var(--vp-c-brand-1);
+  letter-spacing: 0.08em;
+}
+
+.chapter-card .t {
+  display: block;
+  margin-top: 6px;
+  font-weight: 600;
+  color: var(--vp-c-text-1);
+}
+
+.chapter-card .d {
+  display: block;
+  margin-top: 4px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--vp-c-text-2);
+}
+
+/* Agda 代码块：使用与 C/C++ 区分的淡紫色调 */
+.vp-doc div[class*='language-agda'] {
+  background: #f6f5ff;
+}
+
+.dark .vp-doc div[class*='language-agda'] {
+  background: #1b1a2a;
+}
+
+/* 表格更紧凑 */
+.vp-doc table {
+  display: table;
+  width: 100%;
+}
+
+.vp-doc th,
+.vp-doc td {
+  padding: 8px 12px;
+}
+
+/* 首页底部的路线说明 */
+.route-note {
+  margin: 2.5rem auto;
+  max-width: 688px;
+  padding: 20px 24px;
+  border: 1px solid var(--vp-c-divider);
+  border-radius: 14px;
+  background: var(--vp-c-bg-soft);
+}
+
+.route-note h3 {
+  margin-top: 0;
+}
+
+/* 小标签 */
+.tag {
+  display: inline-block;
+  padding: 1px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  line-height: 20px;
+  color: var(--vp-c-brand-1);
+  background: var(--vp-c-brand-soft);
+  border: 1px solid transparent;
+}
+
+/* ---------- 首页自定义板块 ---------- */
+
+.home-section {
+  max-width: 1152px;
+  margin: 0 auto;
+  padding: 8px 24px 72px;
+}
+
+.home-section h2 {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: none;
+  font-size: 1.65rem;
+  letter-spacing: -0.02em;
+}
+
+.home-section .lead {
+  max-width: 46rem;
+  color: var(--vp-c-text-2);
+}
+
+.track-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 18px;
+  margin-top: 26px;
+}
+
+.track-card {
+  display: block;
+  padding: 24px;
+  border: 1px solid var(--vp-c-divider);
+  border-radius: 18px;
+  background: var(--vp-c-bg-soft);
+  text-decoration: none !important;
+  transition: transform 0.25s ease, border-color 0.25s ease, background 0.25s ease;
+}
+
+.track-card:hover {
+  transform: translateY(-3px);
+  border-color: var(--vp-c-brand-1);
+  background: var(--vp-c-bg);
+}
+
+.track-card .track-kicker {
+  display: inline-block;
+  margin-bottom: 10px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--vp-c-brand-1);
+}
+
+.track-card h3 {
+  margin: 0 0 8px;
+  font-size: 1.15rem;
+  color: var(--vp-c-text-1);
+}
+
+.track-card p {
+  margin: 0;
+  font-size: 0.92rem;
+  line-height: 1.65;
+  color: var(--vp-c-text-2);
+}
+
+.track-card .track-meta {
+  display: block;
+  margin-top: 16px;
+  font-size: 0.82rem;
+  color: var(--vp-c-text-3);
+}
+
+.human-note {
+  margin: 24px 0;
+  padding: 16px 20px;
+  border-left: 4px solid var(--vp-c-brand-1);
+  border-radius: 0 12px 12px 0;
+  background: var(--vp-c-brand-soft);
+}
+
+.human-note strong {
+  color: var(--vp-c-brand-1);
+}
+
+/* 打印友好 */
+@media print {
+  .VPSidebar,
+  .VPNav,
+  .VPLocalNav,
+  .VPDocAside {
+    display: none !important;
+  }
+}

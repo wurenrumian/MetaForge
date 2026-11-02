@@ -1,0 +1,18 @@
+{
+  "name": "metaforge",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "MetaForge: 用 Agda 学类型论，理解算法中的生命周期，认识 C++ 模板元编程",
+  "scripts": {
+    "dev": "vitepress dev docs",
+    "build": "vitepress build docs",
+    "preview": "vitepress preview docs"
+  },
+  "devDependencies": {
+    "markdown-it-mathjax3": "^4.3.2",
+    "mermaid": "^11.6.0",
+    "vitepress": "^1.6.4",
+    "vitepress-plugin-mermaid": "^2.0.17"
+  }
+}
