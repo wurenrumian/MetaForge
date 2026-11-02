@@ -1,8 +1,34 @@
 import { defineConfig } from 'vitepress'
-import { withMermaid } from 'vitepress-plugin-mermaid'
+import { render } from 'pele'
 
-export default withMermaid(
-  defineConfig({
+/**
+ * 把 ```mermaid 代码块交给 Pele 在构建期渲染成静态 SVG。
+ * Markdown 里仍然写 Mermaid 语法；产物里没有 mermaid.js，也不需要客户端 JS。
+ */
+function peleDiagrams(md: any) {
+  md.core.ruler.push('pele_diagrams', (state: any) => {
+    for (const token of state.tokens) {
+      if (token.type === 'fence' && token.info.trim().toLowerCase() === 'mermaid') {
+        token.type = 'pele_diagram'
+      }
+    }
+  })
+
+  md.renderer.rules.pele_diagram = (tokens: any[], idx: number) => {
+    const source = tokens[idx].content
+    try {
+      const { svg } = render(source)
+      return `<div class="pele-diagram">${svg}</div>\n`
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error)
+      return `<pre class="pele-error">Pele 渲染失败：${md.utils.escapeHtml(
+        message
+      )}\n\n${md.utils.escapeHtml(source)}</pre>\n`
+    }
+  }
+}
+
+export default defineConfig({
     lang: 'zh-CN',
     title: 'MetaForge',
     description:
@@ -18,6 +44,7 @@ export default withMermaid(
     markdown: {
       math: true,
       lineNumbers: true,
+      config: peleDiagrams,
       languageAlias: {
         // Shiki 没有内置 Agda 语法；Haskell 的关键字/注释/类型签名着色最接近，
         // 比退化成纯文本更好读，也不影响代码复制。
@@ -125,5 +152,4 @@ export default withMermaid(
         copyright: 'MetaForge · 以学习与交流为目的',
       },
     },
-  })
-)
+})

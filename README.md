@@ -40,7 +40,7 @@ content-guide.md     # 内容制作规范（给写作 Agent/贡献者）
 - 中文写作，术语首次出现给英文。
 - 每章包含：一句话结论、具体问题切入、人话解释、常见误解、小结、练习。
 - Agda 示例尽量自包含，不依赖标准库；C++ 示例默认 C++20。
-- 可用 `::: tip` / `::: warning` / `::: details` 容器与 Mermaid 图表。
+- 可用 `::: tip` / `::: warning` / `::: details` 容器与 Mermaid 语法图表（构建期由 **Pele** 渲染成静态 SVG）。
 - 详细规范见 [`content-guide.md`](./content-guide.md)。
 
 ## Agda 环境

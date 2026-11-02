@@ -60,7 +60,7 @@ description: 一句话说明本章解决的问题（用于 SEO 与侧边栏摘�
   - `::: info` 用于背景知识
 - 可用 `<div class="human-note">…</div>` 做“人话解释”块。
 - 可用 `<div class="chapter-grid">` + `<a class="chapter-card">` 做章末导航（可选）。
-- 图表使用 `mermaid` 代码块，**每章最多 1–2 个**，且图必须真的帮助理解，不要为了好看而画。
+- 图表使用 `mermaid` 代码块，**每章最多 1–2 个**，且图必须真的帮助理解，不要为了好看而画。站点在构建期用 **Pele** 把这些代码块渲染成静态 SVG（语法仍是 Mermaid，兼容 Mermaid 12.x 的常见子集），不是 mermaid.js，也不需要客户端 JS。
 - 数学公式使用 `$...$` 或 `$$...$$`（已启用 MathJax）。
 - 不要引用外部图片；不要写需要联网才能看的资源。
 - 链接使用站内绝对路径（不带 `.md` 后缀），例如 `/lifetime/05-containers-iterators`。
