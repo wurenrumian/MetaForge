@@ -1,0 +1,3 @@
+Available packages
+Agda.x86_64        2.8.0-59.fc44 fedora
+Agda-stdlib.noarch 2.3-4.fc44    updates

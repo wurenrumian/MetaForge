@@ -85,13 +85,13 @@ flowchart TD
 
 ## 环境准备
 
-阅读本身不需要安装任何东西；但如果你想跟着敲代码，建议准备：
+阅读本身不需要安装任何东西。如果你想动手改代码，有三条路：
 
-- **Agda 2.6.3 或更新版本**
-- **Agda 标准库（agda-stdlib）2.0 或更新版本**
-- VS Code 的 **Agda mode** 扩展（或在 Emacs 里使用 `agda2-mode`）
+- **零安装**：用 [Agda Pad](https://agdapad.quasicoherent.io/) 在浏览器里直接写、直接加载，适合跟读和试错。
+- **本地安装**：Agda 2.6.3+（推荐 2.8.x），标准库可选；不想装标准库也能跟读本站示例。
+- **编辑器**：Emacs 的 `agda2-mode` 官方支持最好；Neovim 可用 `Cornelis`，Vim 可用 `agda-vim`。VS Code 不是必需品。
 
-安装方式在 [02 · Agda 入门](/type-theory/02-agda-basics) 里有详细步骤。
+具体步骤在 [02 · Agda 入门](/type-theory/02-agda-basics) 里。
 
 ::: tip 不要怕报错
 Agda 的报错信息通常很长，但它是**逐条**告诉你“在当前目标下，这个表达式应该是什么类型”。学会读 goal 和 context，比背语法重要得多。
