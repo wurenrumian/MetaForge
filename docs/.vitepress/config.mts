@@ -18,6 +18,11 @@ export default withMermaid(
     markdown: {
       math: true,
       lineNumbers: true,
+      languageAlias: {
+        // Shiki 没有内置 Agda 语法；Haskell 的关键字/注释/类型签名着色最接近，
+        // 比退化成纯文本更好读，也不影响代码复制。
+        agda: 'haskell',
+      },
       theme: {
         light: 'github-light',
         dark: 'github-dark',
