@@ -27,7 +27,7 @@ features:
     linkText: 看清生命周期
   - icon: ⚙️
     title: C++ 模板元编程
-    details: 模板不是魔法。从推导、特化、SFINAE 到 constexpr 与 Concepts，建立一张可操作的编译期地图。
+    details: 模板不是魔法。从推导、特化、SFINAE 到 constexpr 与 Concepts，再用三个实战小库把机制串起来。
     link: /cpp-tmp/
     linkText: 拆开模板
 ---
@@ -40,7 +40,7 @@ features:
   </p>
 
   <div class="track-grid">
-    <a class="track-card" href="/type-theory/">
+    <a class="track-card" href="type-theory/">
       <span class="track-kicker">Track 01 · 逻辑与证明</span>
       <h3>类型论 × Agda</h3>
       <p>
@@ -50,7 +50,7 @@ features:
       <span class="track-meta">9 篇 · 从零开始的交互式证明</span>
     </a>
 
-    <a class="track-card" href="/lifetime/">
+    <a class="track-card" href="lifetime/">
       <span class="track-kicker">Track 02 · 资源与时间</span>
       <h3>算法中的生命周期</h3>
       <p>
@@ -60,14 +60,14 @@ features:
       <span class="track-meta">10 篇 · C++ 为主，横向对照多门语言</span>
     </a>
 
-    <a class="track-card" href="/cpp-tmp/">
+    <a class="track-card" href="cpp-tmp/">
       <span class="track-kicker">Track 03 · 编译期工程</span>
       <h3>C++ 模板元编程</h3>
       <p>
         模板实例化、特化、SFINAE、<code>constexpr</code>、Concepts——
         这些名词背后是一条演化线：让编译器在运行前把能算的都算完。
       </p>
-      <span class="track-meta">9 篇 · 现代 C++ 视角，不要求类型论基础</span>
+      <span class="track-meta">12 篇 · 机制 + 三个实战小库</span>
     </a>
   </div>
 </div>

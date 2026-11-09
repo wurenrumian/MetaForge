@@ -183,6 +183,46 @@ flowchart LR
   D --> F["forward 还原成右值"]
 ```
 
+### 真实用法：`emplace_back` 省掉的是哪一次
+
+变参模板加完美转发最日常的落点是容器的 `emplace_back`。它和 `push_back` 的区别不在于“快一点”，而在于**少构造了几个临时对象**：
+
+```cpp
+struct Tracker {
+    static inline int copies = 0;
+    static inline int moves = 0;
+    int id;
+    explicit Tracker(int i = 0) : id(i) {}
+    Tracker(const Tracker& o) : id(o.id) { ++copies; }
+    Tracker(Tracker&& o) noexcept : id(o.id) { ++moves; }
+};
+
+std::vector<Tracker> v;
+v.reserve(4);
+Tracker t{7};
+v.push_back(t);              // 拷贝一次
+v.push_back(std::move(t));   // 移动一次
+v.emplace_back(9);           // 直接在容器内存里构造：0 拷贝 0 移动
+```
+
+`emplace_back` 的内部形状就是一个变参模板：
+
+```cpp
+template <class... Args>
+T& emplace_back(Args&&... args) {
+    // 找到空位，把转发过来的参数直接交给构造函数
+    new (slot) T(std::forward<Args>(args)...);
+    return *slot;
+}
+```
+
+`push_back(T&&)` 要求你先有一个 `T` 对象（哪怕只是临时对象），再把它移动进容器；`emplace_back` 把参数原样送到 `T` 的构造函数，临时对象根本不存在。这正是标准库 `make_unique<T>(args...)`、`std::thread(f, args...)`、`std::optional::emplace(args...)` 共同的形状。
+
+两个反直觉的地方：
+
+- **`emplace_back` 不是总比 `push_back` 快。** 如果你手上已经有一个具名对象，`push_back(obj)` 走一次拷贝，`emplace_back(obj)` 也同样走一次拷贝——构造函数里那个参数仍然是左值。省不省，取决于参数是“构造所需的原料”还是“已完成的成品”。
+- **`emplace_back` 会绕过显式性检查吗？** 不会，但它会做隐式转换：`v.emplace_back(3.5)` 对 `std::vector<int>` 是合法的（`3.5` 隐式转 `int`），而 `v.push_back(3.5)` 在 C++11 之后同样合法。真正容易踩的是 `emplace_back` 接受花括号列表推导失败，以及在某些实现里它对 `initializer_list` 的意外匹配。
+
 ## index_sequence 与 apply
 
 有些展开需要“下标”，比如把 `std::tuple` 里的元素依次传给一个函数。这时用 `std::index_sequence`：

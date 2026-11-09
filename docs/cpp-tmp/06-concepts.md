@@ -297,6 +297,44 @@ note:   no type named 'type' in 'struct std::enable_if<false, void>'
 信息是一样的，只是它描述的是“某个 trait 为假”，而不是“某个概念没被满足”。
 :::
 
+## 真实用例：标准库怎么约束 ranges
+
+`std::ranges` 是 concepts 最大规模的一次实际应用：每个算法都用约束声明“我需要什么样的范围”，而不是把要求写在文档里。
+
+`std::ranges::sort` 的签名核心是这一行（libc++ 的写法）：
+
+```cpp
+template <random_access_range _Range, class _Comp = ranges::less, class _Proj = identity>
+  requires sortable<iterator_t<_Range>, _Comp, _Proj>
+constexpr borrowed_iterator_t<_Range>
+operator()(_Range&& __r, _Comp __comp = {}, _Proj __proj = {}) const;
+```
+
+两层约束分工明确：`random_access_range` 要求“能随机访问”，`sortable` 要求“元素能比较、能交换”。换成 `std::list` 会得到一条**指向上游原因**的报错：
+
+```text
+error: no matching function for call to object of type 'const __sort'
+note: candidate template ignored: constraints not satisfied [with _Range = std::list<int> &]
+note: because 'std::list<int> &' does not satisfy 'random_access_range'
+note: because 'iterator_t<std::list<int> &>' (aka '__list_iterator<int, void *>')
+      does not satisfy 'random_access_iterator'
+```
+
+这条链就是概念的价值：编译器不是在“函数体里某一行”报错，而是从算法要求一路退到迭代器能力，最后落在“list 的迭代器不能随机访问”这个你真正需要知道的事实上。同样的错误用 `enable_if` 写，报错是 `no type named 'type' in enable_if<false>`，中间那层语义全丢了。
+
+自己写库时可以直接借用同一个形状：
+
+```cpp
+template <class R>
+concept countable_range = requires(R& r) {
+    { std::size(r) } -> std::convertible_to<std::size_t>;
+    std::ranges::begin(r);
+    std::ranges::end(r);
+};
+```
+
+一条 concept 就是一份**可复用的接口文档**，而且它会被编译器执行。这是 concepts 相对注释和文档最实质的收益。
+
 ## 和 if constexpr、enable_if 的分工
 
 这三样东西经常被混为一谈，但它们管的是不同阶段：

@@ -141,7 +141,10 @@ C++ 模板：
 - `/cpp-tmp/05-variadic-templates`
 - `/cpp-tmp/06-concepts`
 - `/cpp-tmp/07-patterns`
-- `/cpp-tmp/08-cheatsheet`
+- `/cpp-tmp/08-format-checker`
+- `/cpp-tmp/09-serialization`
+- `/cpp-tmp/10-type-erasure`
+- `/cpp-tmp/11-cheatsheet`
 
 ## 8. 参考风格样例
 

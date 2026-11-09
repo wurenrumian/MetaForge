@@ -194,6 +194,19 @@ template int max<int>(int, int);
 
 这就是所谓“显式实例化 + extern template”模式，在大型项目里很常见。它也是把模板实现藏进 `.cpp` 的唯一正当办法，但只对你列出来的那些特化有效：`max<long>` 还是得走头文件。
 
+::: info 标准库也这么干
+libstdc++ 的 `bits/basic_string.tcc` 里就写着：
+
+```cpp
+extern template class basic_string<char>;
+extern template class basic_string<wchar_t>;
+```
+
+`std::string` 几乎每个翻译单元都会用到，如果每个 `.cpp` 都把它整套成员函数实例化一遍，目标文件和链接时间都会失控。标准库的做法是把最常用的两个特化预编译进共享库，再用 `extern template` 告诉使用者“别自己生成”。
+
+有意思的是它上面那段注释：C++23 新增的 `contains` 不在预实例化的成员里，所以 libstdc++ 在 `__cplusplus > 202002L` 时**主动关掉了**这条声明，让 C++23 代码按需隐式实例化。这正好说明 `extern template` 的代价——你列出的特化必须覆盖所有会被用到的成员，漏一个就是链接错误。
+:::
+
 ## 两阶段查找与两个消歧关键字
 
 模板里的名字查找分两个阶段。这个设计经常让新手困惑，不过直觉很简单。

@@ -81,6 +81,34 @@ public:
 
    这段 mixin 还有一个坑：`Counted` 声明了拷贝构造函数和析构函数，**隐式的移动构造函数因此不会被生成**。于是派生类的默认移动构造函数会退化成“拷贝基类”。上例里计数仍然正确（拷贝也会 `++alive`）；基类里一旦持有资源，你得到的就是静默的拷贝，移动根本没有发生。
 
+### 标准库里的 CRTP
+
+CRTP 不是民间技巧，标准库里就有两个天天被用到的地方，只是平时不看基类名字。
+
+`std::enable_shared_from_this<T>` 让对象能安全地拿到指向自己的 `shared_ptr`：
+
+```cpp
+class Session : public std::enable_shared_from_this<Session> {
+public:
+    void start() {
+        auto self = shared_from_this();   // 返回 shared_ptr<Session>，不是 shared_ptr<void>
+        async_read(self);                 // 捕获 self，保证读期间对象活着
+    }
+};
+```
+
+为什么必须把自己传进去？因为基类里的 `shared_from_this()` 要返回 `shared_ptr<Session>`，而基类在定义时根本不知道 `Session` 这个名字。CRTP 把派生类型喂给基类，`shared_from_this()` 的返回类型才有得算。标准库在这里还附带一个约束：对象必须由 `shared_ptr` 管理，否则 `shared_from_this()` 抛 `bad_weak_ptr`——CRTP 只解决类型问题，不解决所有权问题。
+
+`std::ranges::view_interface<D>` 是另一个：它给视图提供 `empty()`、`front()`、`data()`、`size()` 这些成员，实现方式是 `static_cast<D&>(*this)` 拿到派生类，再调用派生的 `begin()`/`end()`。标准库的 `std::ranges::subrange`、`std::views::iota` 返回的 `iota_view`，都继承自它，所以这些成员是“白拿”的：
+
+```cpp
+std::vector<int> v{1, 2, 3};
+std::ranges::subrange r{v.begin(), v.end()};
+r.empty();      // view_interface 通过 CRTP 调用 subrange 自己的 begin()/end()
+```
+
+这两个例子说明 CRTP 的真正用途不是“静态多态的性能”，而是**基类需要知道派生类型，同时又不想要求派生类重写一堆转发代码**。性能只是顺带的结果。
+
 ### 代价
 
 - 每种派生类型生成一份基类代码。`Shape<Circle>`、`Shape<Square>` 是两个毫无关系的类，`std::vector<Shape*>` 装不下它们——CRTP 替代不了运行时多态。
@@ -432,4 +460,4 @@ flowchart TD
 
 ---
 
-下一篇：[08 · 速查表](/cpp-tmp/08-cheatsheet)
+下一篇：[08 · 实战一：编译期格式串检查](/cpp-tmp/08-format-checker)

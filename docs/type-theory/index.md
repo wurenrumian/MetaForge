@@ -49,35 +49,35 @@ flowchart TD
 ## 章节
 
 <div class="chapter-grid">
-  <a class="chapter-card" href="/type-theory/01-what-is-a-type">
+  <a class="chapter-card" href="01-what-is-a-type">
     <span class="no">01</span><span class="t">类型到底是什么</span>
     <span class="d">从“类型是集合”讲到“类型是命题”，建立整条路线的直觉。</span>
   </a>
-  <a class="chapter-card" href="/type-theory/02-agda-basics">
+  <a class="chapter-card" href="02-agda-basics">
     <span class="no">02</span><span class="t">Agda 入门</span>
     <span class="d">模块、声明、模式匹配、交互式证明，以及那些让你少走弯路的小技巧。</span>
   </a>
-  <a class="chapter-card" href="/type-theory/03-inductive-types">
+  <a class="chapter-card" href="03-inductive-types">
     <span class="no">03</span><span class="t">归纳数据类型</span>
     <span class="d">用构造子定义自然数与列表，理解“递归定义”和“结构归纳”。</span>
   </a>
-  <a class="chapter-card" href="/type-theory/04-dependent-types">
+  <a class="chapter-card" href="04-dependent-types">
     <span class="no">04</span><span class="t">依赖类型</span>
     <span class="d">从 List 到 Vec：让长度进入类型，体验“下标越界”在编译期被排除。</span>
   </a>
-  <a class="chapter-card" href="/type-theory/05-propositions-as-types">
+  <a class="chapter-card" href="05-propositions-as-types">
     <span class="no">05</span><span class="t">命题即类型</span>
     <span class="d">把 ∧、∨、→、⊥ 翻译成数据类型，理解证明与程序的一一对应。</span>
   </a>
-  <a class="chapter-card" href="/type-theory/06-equality-and-proofs">
+  <a class="chapter-card" href="06-equality-and-proofs">
     <span class="no">06</span><span class="t">等式与证明</span>
     <span class="d">同一性类型、refl、cong、归纳法，以及为什么加法交换律要证明。</span>
   </a>
-  <a class="chapter-card" href="/type-theory/07-universes">
+  <a class="chapter-card" href="07-universes">
     <span class="no">07</span><span class="t">宇宙与一致性</span>
     <span class="d">Set、Set₁、Setω：为什么“所有类型的类型”不能也是自己。</span>
   </a>
-  <a class="chapter-card" href="/type-theory/08-back-to-mainstream">
+  <a class="chapter-card" href="08-back-to-mainstream">
     <span class="no">08</span><span class="t">回到日常语言</span>
     <span class="d">把 Agda 的视角带回 TypeScript、Rust、Haskell、C++ 和 Python。</span>
   </a>

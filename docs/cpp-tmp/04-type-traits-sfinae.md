@@ -224,6 +224,33 @@ static_assert(!is_range<int>::value);
 `has_size<T>` 回答的是“`declval<const T&>().size()` 这个表达式能不能通过编译”。如果某个类型有个 `size` 成员但返回 `void`，或者是个接受参数的函数，检测结果可能是 `true`，但你的代码用起来照样炸。检测惯用法只保证“语法上能用”，语义要靠文档和测试。
 :::
 
+### 真实用法：序列化库怎么选分支
+
+第 09 篇的序列化器需要回答“这个类型有没有自己的 JSON 表示”。没有概念之前，标准写法是检测惯用法：
+
+```cpp
+template <class T, class = void>
+struct has_member_to_json : std::false_type {};
+
+template <class T>
+struct has_member_to_json<T, std::void_t<decltype(std::declval<const T&>().to_json())>>
+    : std::true_type {};
+
+static_assert(has_member_to_json<WithJson>::value);
+static_assert(!has_member_to_json<WithoutJson>::value);
+```
+
+拿到这个布尔值之后，就能用 `if constexpr` 分派：有 `to_json()` 的走成员版本，没有的走默认的字段遍历。这类“能力探测 + 分派”在库里到处都是，因为库作者**不能要求用户继承某个基类**：用户类型已经写好了，库只能从外部观察它支持什么操作。
+
+C++20 之后，同一个需求通常直接用 concept 表达，代码短一截，报错也清楚一截：
+
+```cpp
+template <class T>
+concept has_to_json = requires(const T& v) { v.to_json(); };
+```
+
+`requires` 表达式和 `void_t` 检测的是同一件事——某个表达式在语法上是否成立。区别在于返回形式：`void_t` 给你一个 `bool` 类型的 trait，`requires` 给你一个能直接写进模板头的约束。第 06 篇讲的 `std::ranges` 约束（`std::ranges::range`、`sortable`）底层都是这个机制，只是把它们组织成了一套可组合、可排序的约束层级。
+
 ## 直接上下文：SFINAE 的边界
 
 SFINAE 只对**替换的直接上下文**（immediate context）里的错误生效。直接上下文指的是声明本身：返回类型、参数类型、模板参数的默认值、异常规格、约束。这些地方出现非法类型或表达式，候选被静默移除。

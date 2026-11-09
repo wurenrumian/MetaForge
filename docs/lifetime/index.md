@@ -33,39 +33,39 @@ flowchart BT
 ## 章节
 
 <div class="chapter-grid">
-  <a class="chapter-card" href="/lifetime/01-three-meanings">
+  <a class="chapter-card" href="01-three-meanings">
     <span class="no">01</span><span class="t">生命周期的三层含义</span>
     <span class="d">存储期、作用域、对象生命周期：先把三个容易混的词分开。</span>
   </a>
-  <a class="chapter-card" href="/lifetime/02-stack-heap-scope">
+  <a class="chapter-card" href="02-stack-heap-scope">
     <span class="no">02</span><span class="t">栈、堆与作用域</span>
     <span class="d">函数调用时发生了什么？为什么局部变量的地址不能随便带出去？</span>
   </a>
-  <a class="chapter-card" href="/lifetime/03-ownership-raii">
+  <a class="chapter-card" href="03-ownership-raii">
     <span class="no">03</span><span class="t">所有权与 RAII</span>
     <span class="d">从“手动 new/delete”到“构造即获取、析构即释放”，以及移动语义。</span>
   </a>
-  <a class="chapter-card" href="/lifetime/04-references-dangling">
+  <a class="chapter-card" href="04-references-dangling">
     <span class="no">04</span><span class="t">引用与悬垂</span>
     <span class="d">引用、指针、string_view、lambda 捕获：谁在悄悄延长谁的生命？</span>
   </a>
-  <a class="chapter-card" href="/lifetime/05-containers-iterators">
+  <a class="chapter-card" href="05-containers-iterators">
     <span class="no">05</span><span class="t">容器与迭代器失效</span>
     <span class="d">vector 扩容、erase 循环、map 与 list 的差异，一次讲透。</span>
   </a>
-  <a class="chapter-card" href="/lifetime/06-recursion-backtracking">
+  <a class="chapter-card" href="06-recursion-backtracking">
     <span class="no">06</span><span class="t">递归与回溯</span>
     <span class="d">栈帧的生命周期、引用参数、回溯时的“恢复现场”为什么必要。</span>
   </a>
-  <a class="chapter-card" href="/lifetime/07-graph-algorithms">
+  <a class="chapter-card" href="07-graph-algorithms">
     <span class="no">07</span><span class="t">图算法中的生命周期</span>
     <span class="d">visited 标记、节点归属、并查集路径压缩、LRU 的双向链表。</span>
   </a>
-  <a class="chapter-card" href="/lifetime/08-concurrency-async">
+  <a class="chapter-card" href="08-concurrency-async">
     <span class="no">08</span><span class="t">并发与异步</span>
     <span class="d">detach 的线程、捕获 this 的回调、shared_ptr 与 weak_ptr 的分工。</span>
   </a>
-  <a class="chapter-card" href="/lifetime/09-checklist">
+  <a class="chapter-card" href="09-checklist">
     <span class="no">09</span><span class="t">检查清单</span>
     <span class="d">写代码时可以逐条对照的“生命周期体检表”。</span>
   </a>

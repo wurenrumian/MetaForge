@@ -1,16 +1,16 @@
 ---
-title: 08 · 速查表
-description: C++20 模板语法、推导转发、特化、constexpr、traits、Concepts、变参折叠与常见报错的对照速查页
+title: 11 · 速查表
+description: C++20 模板语法、推导转发、特化、constexpr、traits、Concepts、变参折叠、常见报错与真实库对照的速查页
 ---
 
-# 08 · 速查表
+# 11 · 速查表
 
 > **一句话**：这一页是工具。写模板时按“我要写什么”找表，报错时按“编译器说了什么”找原因；每条都只给最小可用形态和最常见的坑。
 
 ## 怎么用这一页
 
 - 基准版本是 C++20。标了 `C++23` 的条目需要更新的标准支持，标了 `C++17` 的条目在更早的标准里不可用。
-- 三个入口：① 忘了语法 → 第 1 到 7 节；② 编译不过 → 第 8 节“常见报错速查”；③ 不知道选哪个工具 → 第 9 节决策表。
+- 四个入口：① 忘了语法 → 第 1 到 7 节；② 编译不过 → 第 8 节“常见报错速查”；③ 不知道选哪个工具 → 第 9 节决策表；④ 想知道这个机制在真实库里长什么样 → 第 10 节。
 - 表里的代码都是片段，不是完整程序；需要 `#include` 的地方在对应行里写出来了。
 - 每条只记一件事：它做什么 + 最容易错的地方。细节回看对应章节。
 
@@ -25,7 +25,8 @@ description: C++20 模板语法、推导转发、特化、constexpr、traits、C
 | 参数包、`sizeof...`、四种折叠 | 7 |
 | 这个报错先看哪里 | 8 |
 | 该用虚函数还是模板、`if constexpr` 还是 Concepts | 9 |
-| 接下来读什么 | 10 |
+| 这个机制哪个库在用 | 10 |
+| 接下来读什么 | 11 |
 
 ## 1 · 模板声明语法
 
@@ -214,8 +215,29 @@ decltype(auto) call(F&& f, Args&&... args) {
 | 回调、延迟调用 | 模板参数（零开销） | `std::function` | 裸函数指针（要捕获时） |
 | 类型擦除、稳定 ABI | `std::function` / 手写 vtable | 接口类 | 模板（每个实例化都要重新编译） |
 | 防止同底层类型混用 | 强类型包装 | `enum class` | 命名约定 |
+| 编译期检查字符串字面量（格式串、SQL、正则） | 字面量进 NTTP + `consteval` 解析 | 运行时字符串 + 运行时校验 | 把字面量当成普通 `const char*` |
+| 结构体自动序列化 | 手写字段表（成员指针 tuple） | 宏生成（Describe / visit_struct）、聚合反射（PFR） | 序列化、反序列化各抄一遍 |
+| 把不同类型装进同一容器 | 手写 vtable 或 `std::function` | 接口类 + 虚函数 | 模板（给不出统一类型） |
 
-## 10 · 推荐阅读
+## 10 · 机制 → 真实库
+
+这张表回答一个具体问题：**我学的这个机制，在哪个真实代码里能见到。** 读库时先认出机制，再问“它为什么在这里用”，比逐行读语法有效。
+
+| 机制 | 真实位置 | 那儿的用法 |
+| --- | --- | --- |
+| 类类型 NTTP + `consteval` | fmt / `std::format` 的 `format_string` | 格式串进类型，构造时完成占位符与实参的编译期比对 |
+| `extern template` | libstdc++ 的 `<string>` | `extern template class basic_string<char>;`，最常用特化预实例化到库里 |
+| 特化 | `std::hash`、`std::numeric_limits`、`std::formatter` | 前两个给类型补能力；`formatter` 是留给用户的扩展点 |
+| `constexpr` 求值 | 编译期哈希、常量表、`std::array` 尺寸 | 把字符串或配置在编译期折叠成整数 |
+| `void_t` / `enable_if` | range-v3 的 detection idiom、早期 `std::ranges` 实现 | 检测成员/操作是否存在，再分派重载 |
+| 变参 + 完美转发 | `vector::emplace_back`、`make_unique`、`std::thread` | 把参数原样送到最终构造函数，省掉中间拷贝 |
+| Concepts | `std::ranges::sortable`、`std::formattable` | 把“算法对类型的要求”写进签名，报错指向约束 |
+| CRTP | `std::enable_shared_from_this`、`std::ranges::view_interface` | 基类通过派生类类型拿到 `shared_ptr` 或 view 接口 |
+| type list | Boost.Mp11 的 `mp_list`、folly 的 trait 库 | 编译期类型集合上的 `transform`/`filter`/`contains` |
+| 类型擦除 | `std::function`、`std::any`、`shared_ptr` 的删除器、`llvm::function_ref` | 统一类型 + 值语义，代价是一次间接调用 |
+| 成员指针 + tuple 字段表 | Boost.Describe、visit_struct、Boost.PFR | 用一份字段描述驱动序列化、打印、比较 |
+
+## 11 · 推荐阅读
 
 | 资源 | 用来查什么 |
 | --- | --- |

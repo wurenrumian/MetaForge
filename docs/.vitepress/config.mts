@@ -28,7 +28,11 @@ function peleDiagrams(md: any) {
   }
 }
 
+// 部署在统一入口的子路径下时用 BASE_PATH 覆盖；本地开发保持 '/'
+const base = process.env.BASE_PATH || '/'
+
 export default defineConfig({
+    base,
     lang: 'zh-CN',
     title: 'MetaForge',
     description:
@@ -37,7 +41,7 @@ export default defineConfig({
     cleanUrls: true,
     lastUpdated: true,
     head: [
-      ['link', { rel: 'icon', type: 'image/svg+xml', href: '/logo.svg' }],
+      ['link', { rel: 'icon', type: 'image/svg+xml', href: `${base}logo.svg` }],
       ['meta', { name: 'theme-color', content: '#5b5bd6' }],
     ],
 
@@ -114,7 +118,10 @@ export default defineConfig({
               { text: '05 · 变参模板', link: '/cpp-tmp/05-variadic-templates' },
               { text: '06 · Concepts', link: '/cpp-tmp/06-concepts' },
               { text: '07 · 实战模式', link: '/cpp-tmp/07-patterns' },
-              { text: '08 · 速查表', link: '/cpp-tmp/08-cheatsheet' },
+              { text: '08 · 实战：编译期格式串检查', link: '/cpp-tmp/08-format-checker' },
+              { text: '09 · 实战：结构体序列化', link: '/cpp-tmp/09-serialization' },
+              { text: '10 · 实战：类型擦除', link: '/cpp-tmp/10-type-erasure' },
+              { text: '11 · 速查表', link: '/cpp-tmp/11-cheatsheet' },
             ],
           },
         ],

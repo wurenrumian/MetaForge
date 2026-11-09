@@ -200,6 +200,28 @@ struct std::numeric_limits<MyFixed> {
 
 C++20 之后还有一个新的常用特化点：`std::formatter`。它决定 `std::format("{}", x)` 怎么打印你的类型，写法和 `hash` 类似，但需要实现 `parse` 和 `format` 两个成员，比哈希复杂一些。
 
+### 真实库里的扩展点：formatter
+
+标准库把 `formatter` 设计成**留给用户特化**的接口，所以它是“特化”这个机制在生产代码里最常见的样子：
+
+```cpp
+struct Point { int x; int y; };
+
+template <>
+struct std::formatter<Point> {
+    constexpr auto parse(std::format_parse_context& ctx) { return ctx.begin(); }
+    auto format(const Point& p, std::format_context& ctx) const {
+        return std::format_to(ctx.out(), "({}, {})", p.x, p.y);
+    }
+};
+
+std::format("p = {}", Point{1, 2});      // p = (1, 2)
+```
+
+`parse` 的返回值决定“这个 formatter 认识哪些格式规格”。上面这版直接返回 `ctx.begin()`，意思是“我不接受任何额外规格”——如果你写 `std::format("{:>12}", p)`，它会因为在解析阶段没吃掉 `>12` 而报一条“replacement field misses a terminating `}`”。这不是 bug，而是特化点要求你显式声明支持范围。
+
+更常见的工程做法是**不特化，改用 ADL 重载**。序列化库 nlohmann/json 就是例子：用户为自己的类型写 `to_json(json&, const T&)` 和 `from_json(const json&, T&)`，库通过无限定调用找到它们。这样做的原因正是本章开头那条：函数模板不能偏特化，而 ADL 重载既支持任意类型，又能让调用点保持 `j = p;` 这种自然写法。
+
 ## tag dispatch：用重载代替 if
 
 tag dispatch（标签分派）是老派但常用的技巧：把“编译期条件”编码成一个空类型，用重载决议去选实现。

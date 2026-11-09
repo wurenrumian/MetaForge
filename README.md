@@ -6,7 +6,7 @@
 | --- | --- | --- |
 | 类型论 × Agda | 类型、归纳类型、依赖类型、命题即类型、等式与证明、宇宙 | `/type-theory/` |
 | 算法中的生命周期 | 栈帧、RAII、悬垂引用、迭代器失效、回溯、图算法、并发异步 | `/lifetime/` |
-| C++ 模板元编程 | 模板实例化、特化、`constexpr`、SFINAE、变参模板、Concepts | `/cpp-tmp/` |
+| C++ 模板元编程 | 模板实例化、特化、`constexpr`、SFINAE、变参模板、Concepts，以及三个完整实战小库 | `/cpp-tmp/` |
 
 ## 本地开发
 
@@ -30,7 +30,7 @@ docs/
   guide/             # 阅读指南
   type-theory/       # 类型论路线（9 篇）
   lifetime/          # 生命周期路线（10 篇）
-  cpp-tmp/           # C++ 模板路线（9 篇）
+  cpp-tmp/           # C++ 模板路线（12 篇）
   public/            # 静态资源（logo 等）
 content-guide.md     # 内容制作规范（给写作 Agent/贡献者）
 ```

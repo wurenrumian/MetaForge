@@ -301,6 +301,42 @@ constexpr double power(double base, int exp) {
 
 **工程边界：编译时间、可调试性、报错质量。** 编译期算一张 10 万项的质数表，会让每个包含该头文件的翻译单元都多花几十毫秒；编译期逻辑无法打断点，只能靠 `static_assert` 把中间值“逼”出来——故意写一个失败的断言，看编译器在诊断里化简出的值（较新的 GCC/Clang 会显示，但不保证）。所以：编译期计算适合“小、稳定、频繁使用”的东西（配置常量、尺寸计算、类型判断），不适合“大、一次性的数据加工”。
 
+## 真实用法：把字符串折成常量
+
+编译期计算最日常的落点是**哈希**：日志 tag、命令名、配置键，都是运行时要比较的字符串，而比较本身可以提前到编译期。
+
+```cpp
+consteval std::uint32_t fnv1a(std::string_view s) {
+    std::uint32_t h = 2166136261u;          // FNV 偏移基准
+    for (unsigned char c : s) {
+        h ^= c;
+        h *= 16777619u;                     // FNV 质数
+    }
+    return h;
+}
+
+consteval std::uint32_t operator""_h(const char* s, std::size_t n) {
+    return fnv1a(std::string_view(s, n));
+}
+
+constexpr const char* dispatch(std::uint32_t cmd) {
+    switch (cmd) {
+    case "help"_h:    return "print help";
+    case "version"_h: return "print version";
+    default:          return "unknown";
+    }
+}
+```
+
+`"help"_h` 在编译期就变成了一个 `std::uint32_t`；`switch` 里比较的是整数，运行时不再有字符串比较。这个技巧在日志系统（event tag）、命令行解析、配置表里反复出现，原因很简单：**字符串常量是编译期已知的，比较它的成本却落在运行时**。
+
+两个必须说清楚的限制：
+
+- **哈希会碰撞。** 32 位哈希在几十万条字符串的规模上，碰撞概率已经不可忽略。安全敏感或必须精确匹配的场合，要么用 64 位、要么在 `case` 里再比较一次原串（编译期能拿到 `size` 也行）。日志 tag 这类“撞了最多打个错日志”的场合才适合裸哈希。
+- **`consteval` 卡死了运行时路径。** 用户输入的命令名不能走 `"..."_h`，因为它的长度在运行时才知道。所以真实系统通常是“编译期表 + 运行时兜底”：已知命令走哈希跳转，未知命令走一次普通字符串比较再报错。
+
+顺带一提，`std::hash` 的标准实现没有规定必须能在编译期求值（各家的实现不同）。自己写一个 `consteval` 版本，是唯一能保证“它真的在编译期算完”的办法。
+
 ## 人话总结
 
 <div class="human-note">
