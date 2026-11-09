@@ -5,14 +5,14 @@ description: C++20 模板语法、推导转发、特化、constexpr、traits、C
 
 # 08 · 速查表
 
-> **一句话**：这一页不是教程，是工具——写模板时按“我要写什么”找表，报错时按“编译器说了什么”找原因；每条都只给最小可用形态和最常见的坑。
+> **一句话**：这一页是工具。写模板时按“我要写什么”找表，报错时按“编译器说了什么”找原因；每条都只给最小可用形态和最常见的坑。
 
 ## 怎么用这一页
 
-- **基准版本是 C++20**。标了 `C++23` 的条目需要更长的标准支持，标了 `C++17` 的条目在更早的标准里不可用。
-- 三个入口：**① 忘了语法** → 第 1 到 7 节；**② 编译不过** → 第 8 节“常见报错速查”；**③ 不知道选哪个工具** → 第 9 节决策表。
+- 基准版本是 C++20。标了 `C++23` 的条目需要更新的标准支持，标了 `C++17` 的条目在更早的标准里不可用。
+- 三个入口：① 忘了语法 → 第 1 到 7 节；② 编译不过 → 第 8 节“常见报错速查”；③ 不知道选哪个工具 → 第 9 节决策表。
 - 表里的代码都是片段，不是完整程序；需要 `#include` 的地方在对应行里写出来了。
-- 每条只记一件事：**它做什么 + 最容易错的地方**。细节回看对应章节。
+- 每条只记一件事：它做什么 + 最容易错的地方。细节回看对应章节。
 
 | 我想查 | 去哪节 |
 | --- | --- |
@@ -21,7 +21,7 @@ description: C++20 模板语法、推导转发、特化、constexpr、traits、C
 | 全特化、偏特化、函数模板该用哪个 | 3 |
 | `constexpr` / `consteval` / `constinit` / `if constexpr` | 4 |
 | `<type_traits>` 里到底有哪个 | 5 |
-| Concepts 的四种 `requires` 要求、标准 concepts 列表 | 6 |
+| Concepts 的四类 `requires` 要求、标准 concepts 列表 | 6 |
 | 参数包、`sizeof...`、四种折叠 | 7 |
 | 这个报错先看哪里 | 8 |
 | 该用虚函数还是模板、`if constexpr` 还是 Concepts | 9 |
@@ -48,8 +48,8 @@ description: C++20 模板语法、推导转发、特化、constexpr、traits、C
 | --- | --- | --- |
 | `auto x = e;` | 值；丢掉 `const`、引用、顶层 cv | 拷贝；`auto` 从花括号初始化推导为 `std::initializer_list` |
 | `auto& x = e;` | 左值引用 | 绑定右值/临时对象会失败（`const auto&` 才可以延长生命周期） |
-| `const auto& x = e;` | 常引用 | 可以绑临时对象，但**不要**把它当“总能用”的默认选择：语义上表达的是只读 |
-| `auto&& x = e;` | 转发引用；按值类别绑定，保留 `const` | 只在**类型被推导**时成立 |
+| `const auto& x = e;` | 常引用 | 可以绑临时对象，但不要把它当“总能用”的默认选择：语义上表达的是只读 |
+| `auto&& x = e;` | 转发引用；按值类别绑定，保留 `const` | 只在类型被推导时成立 |
 | `template <class T> void f(T&& x)` | 转发引用 | 写成 `std::vector<T>&&` 就是普通右值引用 |
 | `decltype(e)` | 若 `e` 是名字，取声明类型；否则按值类别 | 这是 `decltype` 与 `decltype((e))` 的唯一区别 |
 | `decltype((e))` | 永远按值类别：左值 → `T&`，将亡值 → `T&&`，纯右值 → `T` | 多一层括号常改变结果 |
@@ -70,14 +70,14 @@ void relay(T&& x) {
 | 需求 | 写法 | 规则 |
 | --- | --- | --- |
 | 为某个具体类型换实现 | `template <> struct X<int> { };` | 全特化；主模板必须先声明 |
-| 为一族类型换实现 | `template <class T> struct X<T*> { };` | 偏特化；**只有类模板和变量模板可以** |
-| 函数模板想要“特化” | 直接加重载 | 函数模板**不能偏特化**；全特化可以但**不参与重载决议**，容易被意外绕过 |
+| 为一族类型换实现 | `template <class T> struct X<T*> { };` | 偏特化；只有类模板和变量模板可以 |
+| 函数模板想要“特化” | 直接加重载 | 函数模板不能偏特化；全特化可以但**不参与重载决议**，容易被意外绕过 |
 | 变量模板特化 | `template <> constexpr int X<int> = 1;` | C++14 起 |
 | 类模板的成员函数特化 | `template <> void X<int>::f() { }` | 成员函数可以全特化，不能偏特化 |
 | 只对某些类型开放 | `template <class T> requires C<T> struct X<T*> { };` | C++20 起偏特化也能带 `requires` 子句，比 `enable_if` 偏特化可读 |
 
 ::: warning 函数模板别用特化
-给函数模板写全特化，调用时可能因为重载决议先选中主模板而**永远走不到特化版本**——这不是编译器 bug，是标准规定。要特化行为，加成普通重载，或者对类模板做特化。
+给函数模板写全特化，调用时可能因为重载决议先选中主模板，特化版本永远走不到——这是标准规定的行为。要特化行为，改成普通重载，或者对类模板做特化。
 :::
 
 ## 4 · constexpr 家族
@@ -85,7 +85,7 @@ void relay(T&& x) {
 | 关键字 | 含义 | 注意 |
 | --- | --- | --- |
 | `constexpr`（变量） | 可以在常量表达式中使用 | 不保证真的在编译期求值，除非用在需要常量的位置 |
-| `constexpr`（函数） | **可以**在编译期求值 | 也接受运行期实参；函数体里不能有 `goto`、`try` 块、`asm`（C++23 也没放开） |
+| `constexpr`（函数） | 可以在编译期求值 | 也接受运行期实参；函数体里不能有 `goto`、`try` 块、`asm`（C++23 也没放开） |
 | `consteval` | **必须**在编译期求值（immediate function） | C++20；传运行期值直接编译错误 |
 | `constinit` | 静态存储期变量必须常量初始化 | C++20；变量本身仍可修改（对比 `constexpr` 隐含 `const`） |
 | `if constexpr` | 按编译期条件丢弃分支 | C++17；被丢弃的分支**不实例化**，所以可以写只在某类型下合法的代码 |
@@ -146,7 +146,7 @@ struct has_value_type<T, std::void_t<typename T::value_type>> : std::true_type {
 | 标准 concepts | 含义 |
 | --- | --- |
 | `std::same_as<T, U>` | 类型完全相同（双向蕴含） |
-| `std::convertible_to<From, To>` | 可隐式且**显式**转换 |
+| `std::convertible_to<From, To>` | 可隐式且显式转换 |
 | `std::derived_from<D, B>` | `D` 公有继承自 `B` |
 | `std::integral` / `std::floating_point` | 整数 / 浮点 |
 | `std::assignable_from` / `std::swappable` | 可赋值 / 可交换 |
@@ -164,8 +164,8 @@ struct has_value_type<T, std::void_t<typename T::value_type>> : std::true_type {
 | `sizeof...(Ts)` | 包中元素个数（编译期常量） |
 | `(pack op ...)` | 一元右折叠：`E1 op (E2 op E3)` |
 | `(... op pack)` | 一元左折叠：`(E1 op E2) op E3` |
-| `(init op ... op pack)` | 二元右折叠，带初值 |
-| `(pack op ... op init)` | 二元左折叠，带初值 |
+| `(init op ... op pack)` | 二元左折叠，带初值 |
+| `(pack op ... op init)` | 二元右折叠，带初值 |
 | `(std::cout << ... << args);` | 左折叠打印整个包 |
 | `(f(args), ...);` | 逗号折叠，按顺序调用每个元素 |
 | `std::index_sequence` / `std::make_index_sequence<N>` | C++14；把包展开成下标序列 |
@@ -226,7 +226,7 @@ decltype(auto) call(F&& f, Args&&... args) {
 | [Compiler Explorer](https://godbolt.org/) | 看模板实例化后的汇编，确认“零成本”是否成立；也能对比不同编译器的报错 |
 | [C++ Insights](https://cppinsights.io/) | 看 `auto`、范围 for、lambda、模板实参推导被展开成什么 |
 | 《Effective Modern C++》（Meyers） | Item 1–3：模板/`auto`/`decltype` 的推导规则；Item 24–27：转发引用、`std::move`/`std::forward`、以及转发引用重载的替代方案（标签分派、`enable_if`） |
-| 《C++ Templates: The Complete Guide》第 2 版 | traits、typelist、CRTP、policy 等模式有专章；第 2 版覆盖到 C++17，Concepts 部分要看后续资料 |
+| 《C++ Templates: The Complete Guide》第 2 版 | traits、type list、CRTP、policy 等模式有专章；第 2 版覆盖到 C++17，Concepts 部分要看后续资料 |
 
 ---
 

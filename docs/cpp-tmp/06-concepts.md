@@ -5,7 +5,7 @@ description: 用 C++20 的 concept 与 requires 把“这个类型必须支持�
 
 # 06 · Concepts
 
-> **一句话**：Concepts 把“模板对类型的要求”从散落在返回类型和 `enable_if` 里的技巧，变成签名上一句能直接读出来的约束；它不改变模板能做什么，只改变“谁被允许进来”以及“进不来时报错长什么样”。
+> **一句话**：Concepts 把“模板对类型的要求”从散落在返回类型和 `enable_if` 里的技巧，变成签名上一句能直接读出来的约束；模板能做什么不变，变的是谁被允许进来、进不来时报错长什么样。
 
 ## 从一个 20 行的报错说起
 
@@ -34,7 +34,7 @@ note:   In instantiation of 'T add(T, T) [with T = Point]':
 error: no match for 'operator+' (operand types are 'Point' and 'Point')
 ```
 
-问题在于：**签名里没有任何地方说明“`T` 必须支持 `+`”**。模板作者心里有这个要求，但它只存在于函数体里。于是编译器只能等实例化到函数体时才发现错误，而那时已经离“你调用错了”这个事实很远了。
+问题在于，签名里没有任何地方说明**“`T` 必须支持 `+`”**。这个要求只存在于模板作者心里，也只体现在函数体里。编译器得等到实例化函数体才发现错误，那时报错已经离“你调用错了”很远。
 
 ### C++17 的补救办法，以及它为什么不够
 
@@ -48,10 +48,10 @@ template <typename T,
 T half(T x) { return x / 2; }
 ```
 
-这段代码能用，但有四个持续存在的痛点：
+这段代码能用，但有四个问题：
 
-1. **约束藏在默认模板参数里**。读签名的人只看到 `template <typename T, typename = ...>`，必须眯着眼去找 `enable_if` 才知道要求是什么。
-2. **两个只差默认模板参数的重载，是同一个声明**。下面这种“按条件选择实现”的写法根本无法编译——两条声明被当成同一个函数模板，而默认实参不能重复给出（clang 报 `template parameter redefines default argument`，GCC 报 `redefinition of 'f'`）：
+1. 约束藏在默认模板参数里。读签名的人只看到 `template <typename T, typename = ...>`，得眯着眼去找 `enable_if` 才知道要求是什么。
+2. 两个只差默认模板参数的重载，是同一个声明。下面这种“按条件选择实现”的写法根本无法编译——两条声明被当成同一个函数模板，而默认实参不能重复给出（clang 报 `template parameter redefines default argument`，GCC 报 `redefinition of 'f'`）：
 
    ```cpp
    template <typename T, typename = std::enable_if_t<std::is_integral_v<T>>>
@@ -62,8 +62,8 @@ T half(T x) { return x / 2; }
    ```
 
    要绕过去，就得改用返回类型、额外的 `int` 形参或者 `void_t` 检测惯用法——每一种都比上一种更像谜语。
-3. **报错指向了错误的位置**。GCC 对 `half(3.5)` 的提示是 `no type named 'type' in 'struct std::enable_if<false, void>'`；如果 `enable_if` 挪到返回类型上，还会变成更误导人的 `couldn't deduce template parameter 'T'`——仿佛问题出在推导，而不是“`double` 不是整数”。（clang 的新版本好一些，但也只告诉你 `is_integral_v<double>` 不成立，不会点出“这个函数要求整数”。）
-4. **约束无法组合**。想要“整数且可哈希”，只能手写 `&&`，而且编译器不知道 `A && B` 比单独的 `A` 更严格，所以没法用它来给重载排序。
+3. 报错指向错误的位置。GCC 对 `half(3.5)` 的提示是 `no type named 'type' in 'struct std::enable_if<false, void>'`；如果 `enable_if` 挪到返回类型上，还会变成更误导人的 `couldn't deduce template parameter 'T'`——仿佛问题出在推导，而不是“`double` 不是整数”。（clang 的新版本好一些，但也只告诉你 `is_integral_v<double>` 不成立，不会点出“这个函数要求整数”。）
+4. 约束无法组合。想要“整数且可哈希”，只能手写 `&&`，而且编译器不知道 `A && B` 比单独的 `A` 更严格，所以没法用它来给重载排序。
 
 Concepts 正是逐条对应这四个问题设计的。
 
@@ -91,17 +91,17 @@ static_assert(Addable<std::string>);        // 需要 #include <string>
 static_assert(!Addable<Point>);
 ```
 
-注意 `Addable<Point>` 得到的是 `false` 而不是编译错误——这正是 `requires` 表达式的关键性质：**它把“这个表达式写不出来”变成 `false`，而不是把整个程序变成错误**。
+`Addable<Point>` 求值为 `false`，编译照常通过。这是 `requires` 表达式最关键的性质：**它把“这个表达式写不出来”变成 `false`**。
 
 ### requires 表达式里到底发生了什么
 
-`requires(T a, T b) { ... }` 的花括号里是一串**要求**（requirement），外面那对小括号里声明的 `a`、`b` 是“假想的参数”：它们只是用来拼出表达式的名字，**不会被构造，也不会被求值**。所以即使 `T` 不可拷贝、不可默认构造，`requires(T a, T b)` 也完全合法。
+`requires(T a, T b) { ... }` 的花括号里是一串要求（requirement），外面那对小括号里声明的 `a`、`b` 是“假想的参数”：它们只是用来拼出表达式的名字，**不会被构造，也不会被求值**。所以即使 `T` 不可拷贝、不可默认构造，`requires(T a, T b)` 也完全合法。
 
-这件事的推论很重要：`requires` 表达式检查的是**表达式能不能通过编译**，不是它算出什么。函数体、模板体、运行期行为，全都不在检查范围内。
+换句话说，`requires` 表达式检查的是**表达式能不能通过编译**，不是它算出什么；函数体、模板体、运行期行为都不在检查范围内。
 
 ## requires 表达式的四类要求
 
-这是本章唯一需要背下来的结构，因为它决定了你能写出多精确的约束。
+这四类要求值得记住：它们决定了你能把约束写多精确。
 
 ```cpp
 #include <concepts>
@@ -135,14 +135,14 @@ concept MyContainer = requires(T c, const T cc, std::size_t i) {
 | 简单要求 | `c.begin();` | 这个表达式能否通过编译 | 返回值是什么类型 |
 | 类型要求 | `typename T::value_type;` | 这个类型名是否存在且合法 | 它有没有被使用 |
 | 复合要求 | `{ expr } noexcept -> C;` | 表达式合法、是否 `noexcept`、`decltype((expr))` 是否满足约束 `C` | 表达式的值 |
-| 嵌套要求 | `requires C<T>;` | 约束 `C<T>` 是否被**满足** | —— |
+| 嵌套要求 | `requires C<T>;` | 约束 `C<T>` 是否被满足 | —— |
 
 几个容易踩的细节：
 
 - **复合要求里的返回类型约束检查的是 `decltype((expr))`**，也就是带括号的形式。对返回左值的函数，这个类型是引用（`T&`），所以 `{ c.front() } -> std::same_as<int>` 通常不成立，而 `-> std::same_as<int&>` 或 `-> std::convertible_to<int>` 才是对的。
 - **`noexcept` 是“必须 noexcept”**，不是“检查是否 noexcept”。写成 `{ f() } noexcept;` 而 `f()` 会抛，这条要求就是不满足。
-- **嵌套要求可以直接写常量表达式**，不一定是 concept，例如 `requires sizeof(T) == 8;`。它和复合要求的分工是：复合要求管“这个表达式存在吗”，嵌套要求管“这个已知事实成立吗”。
-- 四类要求按书写顺序检查，**左边不满足时右边的表达式不会被替换**。这让“先检查便宜且最常失败的，再检查贵的”成为一种实际有效的优化。
+- 嵌套要求可以直接写常量表达式，不一定是 concept，例如 `requires sizeof(T) == 8;`。它和复合要求的分工是：复合要求管“这个表达式存在吗”，嵌套要求管“这个已知事实成立吗”。
+- 四类要求按书写顺序检查，**左边不满足时右边的表达式不会被替换**。所以把“便宜且最常失败的”排在前面是有实际收益的。
 
 ## 写法：三种等价形式
 
@@ -162,7 +162,7 @@ T sum3b(T a, T b, T c) { return a + b + c; }
 void show(Addable auto x);
 ```
 
-三者对 `sum3` 来说是等价的；`show` 稍微特殊，因为它根本没写 `template <...>`，每个 `auto` 各自引入一个隐藏的类型参数，所以 `void f(Addable auto a, Addable auto b)` 里的 `a` 和 `b` **可以是不同类型**，两个约束分别检查。
+三者对 `sum3` 来说是等价的。`show` 稍微特殊：它根本没写 `template <...>`，每个 `auto` 各自引入一个隐藏的类型参数。所以 `void f(Addable auto a, Addable auto b)` 里的 `a` 和 `b` 可以是不同类型，两个约束分别检查。
 
 日常选择：
 
@@ -188,9 +188,9 @@ template <typename T>
 T divide(T a, T b) { return a / b; }
 ```
 
-`&&` 满足**短路**：左边不满足时，右边连替换都不会发生。`||` 同理，左边满足就不再检查右边。这不是编译器优化的细节，而是写在标准里的语义，也是给复杂约束排序的依据。
+`&&` 满足**短路**：左边不满足时，右边连替换都不会发生。`||` 同理，左边满足就不再检查右边。这是标准规定的语义，所以给复杂约束排序有据可依。
 
-`!` 虽然合法，但**不建议用它来挑重载**：否定式约束在逻辑上正确，却几乎不参与有用的约束包含，你会得到“两个候选都可行，却排不出谁更严格”的尴尬结果。
+`!` 虽然合法，但不建议用它来挑重载：否定式约束在逻辑上正确，却几乎不参与有用的约束包含，你会得到“两个候选都可行，却排不出谁更严格”的尴尬结果。
 
 ## 约束包含：为什么更严格的那个会赢
 
@@ -218,14 +218,14 @@ int main() {
 }
 ```
 
-为什么 `pick(1)` 选第二个？规则叫**约束包含**（constraint subsumption）：每个约束最终会被拆成若干条**原子约束**（atomic constraint，大致就是“一个 concept-id 或一个常量表达式”）。`SignedIntegral<T>` 展开后是 `Integral<T> && std::is_signed_v<T>`，它的原子集合**包含**了 `Integral<T>` 的原子集合，因此它更严格，在两者都可行时胜出。
+为什么 `pick(1)` 选第二个？规则叫约束包含（constraint subsumption）：每个约束最终会被拆成若干条原子约束（atomic constraint，大致就是“一个 concept-id 或一个常量表达式”）。`SignedIntegral<T>` 展开后是 `Integral<T> && std::is_signed_v<T>`，它的原子集合包含了 `Integral<T>` 的原子集合，因此它更严格，在两者都可行时胜出。
 
-两条必须记住的限制：
+限制有两条：
 
 - **原子约束按“拼写”判等，不按逻辑判等。** 写 `std::is_integral_v<T>` 和写 `std::integral<T>` 是两个不同的原子，即使它们永远同真同假——这时两条重载谁都不比谁严格，调用会变成二义性错误。这也是为什么库里普遍建议“约束尽量写成有名字的 concept，并且复用同一个 concept”。
 - **只有参与约束的表达式才会被比较**。写在返回类型里的 `enable_if_t`、写在函数体里的 `static_assert`，都不参与排序。
 
-用一张图收一下整个流程：
+用一张图收束整个流程：
 
 ```mermaid
 flowchart TD
@@ -272,11 +272,11 @@ note: because 'double' does not satisfy 'integral'
 note: because 'is_integral_v<double>' evaluated to false
 ```
 
-现代 clang 对 `enable_if` 也已经给出了像样的提示，所以别指望“换成 Concepts 报错就自动变短”。真正的差别有三点：
+现代 clang 对 `enable_if` 也已经给出了像样的提示，所以别指望“换成 Concepts 报错就自动变短”。差别有三点：
 
 1. **候选签名里就写着约束**。版本 B 的候选声明是 `template <std::integral T>`，读声明即可知道要求，不用去翻默认模板参数。
-2. **失败原因逐层展开**。`because ... / because ...` 是一棵树，从“不满足 `integral`”走到“`is_integral_v<double>` 为假”，中间每一层都有名字。
-3. **自己的 `requires` 表达式会指到具体那一条要求**。把约束换成 `concept Pushable = requires(T c, typename T::value_type v) { c.push_back(v); };`，再调用 `f(42)`，clang 输出：
+2. 失败原因逐层展开。`because ... / because ...` 是一棵树，从“不满足 `integral`”走到“`is_integral_v<double>` 为假”，中间每一层都有名字。
+3. 自己的 `requires` 表达式会指到具体那一条要求。把约束换成 `concept Pushable = requires(T c, typename T::value_type v) { c.push_back(v); };`，再调用 `f(42)`，clang 输出：
 
    ```text
    note: because 'int' does not satisfy 'Pushable'
@@ -299,18 +299,18 @@ note:   no type named 'type' in 'struct std::enable_if<false, void>'
 
 ## 和 if constexpr、enable_if 的分工
 
-这三样东西经常被混为一谈，其实管的是不同阶段：
+这三样东西经常被混为一谈，但它们管的是不同阶段：
 
-- **`if constexpr`** 在**函数体内部**按编译期条件选分支。它适合“同一个算法，对不同类型有不同的实现”，但它不改变“这个重载是否存在”——你仍然得先有一个能接受该类型的重载。
-- **Concepts** 管**接口层面**：这个重载/这个类对这个类型是否存在，以及多个重载之间谁更优先。
-- **`enable_if` / SFINAE** 是 Concepts 的底层机制。Concepts 没有取代它，只是给它加了语法和排序规则。
+- `if constexpr` 在函数体内部按编译期条件选分支。它适合“同一个算法，对不同类型有不同的实现”，但它不改变“这个重载是否存在”——你仍然得先有一个能接受该类型的重载。
+- Concepts 管接口层面：这个重载/这个类对这个类型是否存在，以及多个重载之间谁更优先。
+- `enable_if` / SFINAE 是 Concepts 的底层机制。Concepts 没有取代它，只是给它加了语法和排序规则。
 
 那么什么时候仍然需要 SFINAE？
 
-1. **工具链停在 C++17**。这在嵌入式、老编译器、跨平台 SDK 里很常见。库代码通常用 `#if defined(__cpp_concepts)` 分成两套实现。
-2. **要读别人的代码**。标准库、Boost、各家 SDK 里 `void_t` 检测惯用法遍地都是，读不懂就没法判断一个重载为什么没被选中。
-3. **需要在 C++17 里“条件性地存在一个成员”**。C++20 可以用 `requires` 子句让成员函数按条件存在，C++17 只能靠 `enable_if` 加基类技巧。
-4. **某些情形概念表达不了**，比如约束依赖“某个表达式在当前作用域能否找到”（ADL 相关）这类上下文细节——这时 `requires` 表达式通常仍能写出来，但可读性会明显下降。
+1. 工具链停在 C++17。这在嵌入式、老编译器、跨平台 SDK 里很常见。库代码通常用 `#if defined(__cpp_concepts)` 分成两套实现。
+2. 要读别人的代码。标准库、Boost、各家 SDK 里 `void_t` 检测惯用法遍地都是，读不懂就没法判断一个重载为什么没被选中。
+3. 需要在 C++17 里“条件性地存在一个成员”。C++20 可以用 `requires` 子句让成员函数按条件存在，C++17 只能靠 `enable_if` 加基类技巧。
+4. 某些情形概念表达不了，比如约束依赖“某个表达式在当前作用域能否找到”（ADL 相关）这类上下文细节——这时 `requires` 表达式通常仍能写出来，但可读性会明显下降。
 
 ::: tip 一条实践建议
 新代码里，**能用 Concepts 就不用 `enable_if`**；必须兼容 C++17 时，也尽量把检测逻辑收进一个 `is_xxx_v` 变量模板或 `void_t` 别名，让业务代码里只出现名字，不出现机制。
@@ -319,14 +319,14 @@ note:   no type named 'type' in 'struct std::enable_if<false, void>'
 ## 人话总结
 
 <div class="human-note">
-<strong>如果只记住一件事：</strong>Concepts 是“写在门牌上的准入条件”。`enable_if` 把条件写在门背后的小纸条上，只有拆开模板参数的人看得见；Concepts 写在门口，编译器检查时按它拦人，出错时也照着门牌念给你听。而且因为条件写在门口，编译器还能比较两块门牌谁更严——这就是约束包含。
+<strong>如果只记住一件事：</strong>Concepts 是“写在门牌上的准入条件”。`enable_if` 把条件写在门背后的小纸条上，只有拆开模板参数的人看得见；Concepts 写在门口，编译器检查时按它拦人，出错时也照着门牌念给你听。条件写在门口，编译器才能比较两块门牌谁更严——这就是约束包含。
 </div>
 
 ## 常见误解
 
 **误解一：满足 concept 就说明这个类型“行为正确”。**
 
-不是。`Addable<T>` 只保证 `a + b` 这个表达式能通过编译。`operator+` 是否满足结合律、是否返回了合理的东西，编译器一概不管。Concepts 检查的是**语法层面的可用性**（所谓“语义要求”只写在文档里，靠人遵守），它比 SFINAE 强，但仍然只是“合同”的一部分。
+不是。`Addable<T>` 只保证 `a + b` 这个表达式能通过编译。`operator+` 是否满足结合律、是否返回了合理的东西，编译器一概不管。Concepts 检查的是语法层面的可用性（所谓“语义要求”只写在文档里，靠人遵守），它比 SFINAE 强，但仍然只是“合同”的一部分。
 
 **误解二：有了 Concepts，SFINAE 就没用了。**
 
@@ -334,11 +334,11 @@ Concepts 是建立在 SFINAE 之上的：约束不满足时，那个候选仍然
 
 **误解三：`requires` 里的表达式会被执行。**
 
-不会。`requires` 表达式是**未求值操作数**（unevaluated operand），跟 `sizeof`、`decltype` 一样。写 `requires(T& r) { ++r; }` 不会真的自增任何东西，写 `requires { std::cout << t; }` 也不会打印半行。它只问一句：“这段代码如果写在这里，能编译吗？”
+不会。`requires` 表达式是未求值操作数（unevaluated operand），跟 `sizeof`、`decltype` 一样。写 `requires(T& r) { ++r; }` 不会真的自增任何东西，写 `requires { std::cout << t; }` 也不会打印半行。它只问一句：“这段代码如果写在这里，能编译吗？”
 
 **误解四：约束写得越严越好。**
 
-约束是接口的一部分。把每个函数都加上一堆 `requires`，会让本来能用的类型被挡在门外（尤其是隐式转换、代理引用、`const` 引用这些边角情况），还会因为原子约束拼写不一致破坏重载排序。**只约束你真正用到的东西**：函数体里用到了 `+`，就约束 `+`；没用到 `size()`，就别要求 `size()`。
+约束是接口的一部分。把每个函数都加上一堆 `requires`，会让本来能用的类型被挡在门外（尤其是隐式转换、代理引用、`const` 引用这些边角情况），还会因为原子约束拼写不一致破坏重载排序。**只约束你实际用到的东西**：函数体里用到了 `+`，就约束 `+`；没用到 `size()`，就别要求 `size()`。
 
 ## 本章小结
 

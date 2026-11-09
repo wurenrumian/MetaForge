@@ -1,6 +1,6 @@
 # MetaForge
 
-一个用 VitePress 搭建的技术学习站点，包含三条相对独立的路线：
+用 VitePress 搭建的技术学习站点，三条路线相对独立：
 
 | 路线 | 内容 | 入口 |
 | --- | --- | --- |
@@ -51,7 +51,7 @@ content-guide.md     # 内容制作规范（给写作 Agent/贡献者）
 - 本地 Agda 2.6.3+（推荐 2.8.x），标准库可选
 - Emacs `agda2-mode` / Neovim `Cornelis` / Vim `agda-vim`
 
-本站的 Agda 代码按“自包含单文件”编写，可以直接粘进 Agda Pad 或本地 `.agda` 文件。
+本站的 Agda 代码按自包含单文件编写，可以直接粘进 Agda Pad 或本地 `.agda` 文件。
 
 ## 部署
 
