@@ -84,11 +84,11 @@ void relay(T&& x) {
 
 | 关键字 | 含义 | 注意 |
 | --- | --- | --- |
-| `constexpr`（变量） | 可以在常量表达式中使用 | 不保证真的在编译期求值，除非用在需要常量的位置 |
-| `constexpr`（函数） | 可以在编译期求值 | 也接受运行期实参；函数体里不能有 `goto`、`try` 块、`asm`（C++23 也没放开） |
-| `consteval` | **必须**在编译期求值（immediate function） | C++20；传运行期值直接编译错误 |
+| `constexpr`（变量） | 可以在常量表达式中使用 | 初始化必须是常量表达式；变量隐含 `const` |
+| `constexpr`（函数） | 可以在编译期求值 | 也接受运行时实参；函数体不能有 `asm`；`goto` 自 C++23 起允许，`try` 块自 C++20 起允许 |
+| `consteval` | **必须**在编译期求值（immediate function） | C++20；传运行时值直接编译错误 |
 | `constinit` | 静态存储期变量必须常量初始化 | C++20；变量本身仍可修改（对比 `constexpr` 隐含 `const`） |
-| `if constexpr` | 按编译期条件丢弃分支 | C++17；被丢弃的分支**不实例化**，所以可以写只在某类型下合法的代码 |
+| `if constexpr` | 按编译期条件丢弃分支 | C++17；被丢弃的分支**不实例化**（仅在模板里），所以可以写只在某类型下合法的代码 |
 | `static_assert(cond, "msg")` | 编译期断言 | C++17 起可省略消息：`static_assert(cond);` |
 | `consteval` 里的 `throw` | 编译期失败路径 | 可以写，但一旦求值到它编译就失败 |
 | `std::is_constant_evaluated()` | 判断当前是否在常量求值中 | C++20；C++23 有更清楚的 `if consteval` |
@@ -197,19 +197,19 @@ decltype(auto) call(F&& f, Args&&... args) {
 | `no type named 'type' in 'std::enable_if<false, void>'` | 这个 `enable_if` 的条件 | 条件为假 → 该重载被移出候选集；把条件翻译成人话就能定位 |
 | `redefinition of 'f'` | 两处声明是否只差默认模板参数 | C++17 里用 `enable_if` 做两个重载的典型错误，改用 Concepts 或额外形参 |
 | `use of deleted function` | 谁删掉了它 | 声明了析构函数/拷贝构造 → 隐式移动被删除；`= delete` 的显式禁用 |
-| `... is not a constant expression` | 表达式里用了什么 | 用了运行期变量、未初始化的值；C++20 之前常量求值里不能出现 `new` |
+| `... is not a constant expression` | 表达式里用了什么 | 用了运行时变量、未初始化的值；C++20 之前常量求值里不能出现 `new` |
 | `undefined reference to 'X<int>::f()'` | 定义在哪个文件 | 模板定义写进了 `.cpp`（应放头文件），或显式实例化缺失 |
 
 ## 9 · 该用什么工具
 
 | 需求 | 首选 | 备选 | 别用 |
 | --- | --- | --- | --- |
-| 一组类型共享接口，运行期选择实现 | 虚函数 | `std::function`、`variant` + `visit` | CRTP（没有统一类型） |
+| 一组类型共享接口，运行时选择实现 | 虚函数 | `std::function`、`variant` + `visit` | CRTP（没有统一类型） |
 | 同接口、类型编译期固定、调用在热点上 | CRTP | 直接写普通模板函数 | 虚函数（看不出收益时） |
 | 按编译期条件选一段实现 | `if constexpr` | 标签分派 | SFINAE（可读性最差） |
 | 限制函数接受的类型 | Concepts | `enable_if`（C++17） | 只写注释 |
 | 需要“更严格的重载优先” | Concepts 的约束包含 | 标签分派 | `enable_if`（无法排序） |
-| 运行期异构集合 | `std::variant` + `visit` | 基类指针 + 虚函数 | type list |
+| 运行时异构集合 | `std::variant` + `visit` | 基类指针 + 虚函数 | type list |
 | 编译期类型集合 | type list | `std::tuple<Ts...>` 当容器 | 宏拼接 |
 | 回调、延迟调用 | 模板参数（零开销） | `std::function` | 裸函数指针（要捕获时） |
 | 类型擦除、稳定 ABI | `std::function` / 手写 vtable | 接口类 | 模板（每个实例化都要重新编译） |

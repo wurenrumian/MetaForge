@@ -46,7 +46,7 @@ GCC 的措辞略有不同，note 里写的是 `deduced conflicting types for par
 int max(int a, int b) { return a > b ? a : b; }
 ```
 
-这份具体产物叫特化（specialization）——注意这里的“特化”是广义的“一次具体化”，和第 02 篇讲的“显式特化”不是一回事。从模板到具体函数的过程叫实例化（instantiation）。
+这份具体产物叫特化（specialization）——注意这里的“特化”是广义的“一次具体化”，和第 02 篇讲的“全特化”不是一回事。从模板到具体函数的过程叫实例化（instantiation）。
 
 这个区别有个直接的后果：
 
@@ -109,7 +109,7 @@ flowchart LR
   E --> F["链接器合并重复副本"]
 ```
 
-第三种是显式特化（explicit specialization），也就是“我要给某个类型换一套实现”。它长得像模板，但已经不是模板了：
+还有一样东西容易和实例化混淆：全特化（explicit specialization），也就是“我要给某个类型换一套实现”。它长得像模板，但已经不是模板了：
 
 ```cpp
 template <>
@@ -144,7 +144,7 @@ max(static_cast<double>(1), 2.5);
 max(1, 2);
 ```
 
-第 1 条有个陷阱：`max<int>(1, 2.5)` 能编译，但 `2.5` 会被截断成 `2`，返回 `2` 而不是 `2.5`。Clang 默认会给一条 `-Wliteral-conversion` 警告（实测输出 `implicit conversion from 'double' to 'int' changes value from 2.5 to 2`），但并非所有编译器都会提醒，所以别指望警告来救你。第 2 条更安全，代价是返回类型为值，不是引用。`std::max` 返回 `const T&` 是为了避免拷贝，而跨类型比较时你没法返回一个统一类型的引用。
+第 1 条有个陷阱：`max<int>(1, 2.5)` 能编译，但 `2.5` 会被截断成 `2`，返回 `2` 而不是 `2.5`。Clang 默认会给一条 `-Wliteral-conversion` 警告（实测输出 `implicit conversion from 'double' to 'int' changes value from 2.5 to 2`），但并非所有编译器都会提醒，所以别指望警告来救你。第 2 条更安全，代价是返回值而不是引用。`std::max` 返回 `const T&` 是为了避免拷贝，而跨类型比较时你没法返回一个统一类型的引用。
 
 ::: warning 返回引用的代价
 写 `template <class T> const T& max(const T& a, const T& b)` 时，如果传入的是临时对象，返回的引用可能指向已经销毁的对象。`std::max(a, b)` 本身没问题，但 `const auto& r = std::max(f(), g());` 就是悬垂引用。这是接口设计问题，不是模板问题，但它经常和模板一起出现。
@@ -386,7 +386,7 @@ note: in instantiation of function template specialization 'show<int>' requested
 
 **误解三：模板函数不写 `inline` 会重复定义。**
 
-模板的实例化产物有“模糊链接”属性，链接器会自动合并重复副本，不需要你写 `inline`。会重复定义的是显式特化（`template <> ...`），它就是一个普通函数，多个 `.cpp` 里各写一份就会报 `multiple definition`——通常要放到头文件并标 `inline`。
+模板的实例化产物有“模糊链接”属性，链接器会自动合并重复副本，不需要你写 `inline`。会重复定义的是全特化（`template <> ...`），它就是一个普通函数，多个 `.cpp` 里各写一份就会报 `multiple definition`——通常要放到头文件并标 `inline`。
 
 **误解四：模板报错那么长，说明模板不可用。**
 

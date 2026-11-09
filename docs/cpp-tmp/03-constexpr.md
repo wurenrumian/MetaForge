@@ -29,7 +29,7 @@ note: non-constexpr function 'square' cannot be used in a constant expression
 
 GCC 会说得更直白一点：`'square(4)' is not a constant expression`。
 
-`square` 本身没写错。**编译器必须在翻译期就知道 `N` 的值**，而 `square` 是一个普通函数：按 C++ 的模型，普通函数调用发生在运行时，编译器没有义务（也没有权限）替你先算一遍。
+`square` 本身没写错。**编译器必须在编译期就知道 `N` 的值**，而 `square` 是一个普通函数：按 C++ 的模型，普通函数调用发生在运行时，编译器没有义务（也没有权限）替你先算一遍。
 
 把 `int square(int x)` 改成 `constexpr int square(int x)`，这段代码立刻就能编译：`Buffer<16>` 被实例化出来，`square(4)` 在编译期求值。
 
@@ -55,7 +55,7 @@ constexpr int square(int x) { return x * x; }
 
 constexpr int a = square(4);   // 编译期算，a 是常量
 int b = 3;
-int c = square(b);             // 运行期算，普通函数调用
+int c = square(b);             // 运行时算，普通函数调用
 ```
 
 同一个 `square`，两次调用的求值时机不同。决定时机的是调用所在的上下文，不是函数本身：
@@ -253,7 +253,7 @@ constinit int g_b = compute();    // 错误：compute() 不是常量表达式
 
 ## std::is_constant_evaluated 与它的陷阱
 
-有时同一个 `constexpr` 函数想在编译期和运行期走不同实现——比如编译期用手写循环，运行期调用一个高度优化的库函数：
+有时同一个 `constexpr` 函数想在编译期和运行时走不同实现——比如编译期用手写循环，运行时调用一个高度优化的库函数：
 
 ```cpp
 constexpr double power(double base, int exp) {
@@ -262,7 +262,7 @@ constexpr double power(double base, int exp) {
         for (int i = 0; i < exp; ++i) r *= base;
         return r;
     } else {
-        return std::pow(base, exp);     // 非 constexpr，只在运行期走这里
+        return std::pow(base, exp);     // 非 constexpr，只在运行时走这里
     }
 }
 ```
@@ -284,7 +284,7 @@ constexpr double power(double base, int exp) {
     if consteval {                     // C++23
         // 编译期路径
     } else {
-        // 运行期路径
+        // 运行时路径
     }
 }
 ```
@@ -295,7 +295,7 @@ constexpr double power(double base, int exp) {
 
 `constexpr` 不是“把运行时搬到编译期”的万能开关，它有硬边界和软边界。
 
-**硬边界：语言层面不允许的操作。** 在常量求值中不能出现 `reinterpret_cast`、`asm`、`goto`（C++23 之前）、对未定义行为的操作（越界、有符号溢出、空指针解引用）。动态分配在 C++20 起有限放开：可以在常量求值里 `new`，但必须在同一次求值内 `delete` 掉，所以不能返回一个指向堆内存的常量对象。I/O 完全不支持——编译期没有 `printf`。
+**硬边界：语言层面不允许的操作。** 在常量求值中不能出现 `reinterpret_cast`、`asm`、`goto`（C++23 之前）、会导致未定义行为的操作（越界、有符号溢出、空指针解引用）。动态分配在 C++20 起有限放开：可以在常量求值里 `new`，但必须在同一次求值内 `delete` 掉，所以不能返回一个指向堆内存的常量对象。I/O 完全不支持——编译期没有 `printf`。
 
 **软边界：实现定义的资源上限。** 标准允许编译器拒绝“太复杂”的常量表达式。GCC 有 `-fconstexpr-ops-limit` 和 `-fconstexpr-depth`，Clang 有 `-fconstexpr-steps`，超了会报 “constexpr evaluation hit maximum step limit”。这意味着同一段代码在不同编译器、不同优化级别下可能一个能过一个不能过。写库的时候不要把编译期计算推到临界点。
 
@@ -319,7 +319,7 @@ constexpr double power(double base, int exp) {
 
 **误解三：写了 `constexpr` 就一定能编译期求值。**
 
-不一定。实参必须是常量表达式；函数体不能触碰上文的硬边界；还不能超过编译器的步数上限。任何一条不满足，编译器都会退回到运行期（如果上下文允许）或者直接报错（如果上下文要求常量）。
+不一定。实参必须是常量表达式；函数体不能触碰上文的硬边界；还不能超过编译器的步数上限。任何一条不满足，编译器都会退回到运行时（如果上下文允许）或者直接报错（如果上下文要求常量）。
 
 **误解四：`consteval` 就是更强的 `constexpr`。**
 

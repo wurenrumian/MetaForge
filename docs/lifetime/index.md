@@ -35,7 +35,7 @@ flowchart BT
 <div class="chapter-grid">
   <a class="chapter-card" href="/lifetime/01-three-meanings">
     <span class="no">01</span><span class="t">生命周期的三层含义</span>
-    <span class="d">存储期、作用域、所有权：先把三个容易混的词分开。</span>
+    <span class="d">存储期、作用域、对象生命周期：先把三个容易混的词分开。</span>
   </a>
   <a class="chapter-card" href="/lifetime/02-stack-heap-scope">
     <span class="no">02</span><span class="t">栈、堆与作用域</span>
@@ -79,7 +79,6 @@ flowchart BT
 
 - Rust：借用检查器如何把很多问题变成编译错误。
 - Python / Java / Go：垃圾回收解决了什么，又没有解决什么。
-- JavaScript / TypeScript：闭包捕获与事件循环里的“逻辑生命周期”。
 
 ## 怎么读
 

@@ -59,7 +59,7 @@ flowchart TD
   </a>
   <a class="chapter-card" href="/type-theory/03-inductive-types">
     <span class="no">03</span><span class="t">归纳数据类型</span>
-    <span class="d">用构造子定义自然数、布尔值和列表，理解“递归定义”和“结构归纳”。</span>
+    <span class="d">用构造子定义自然数与列表，理解“递归定义”和“结构归纳”。</span>
   </a>
   <a class="chapter-card" href="/type-theory/04-dependent-types">
     <span class="no">04</span><span class="t">依赖类型</span>
@@ -79,7 +79,7 @@ flowchart TD
   </a>
   <a class="chapter-card" href="/type-theory/08-back-to-mainstream">
     <span class="no">08</span><span class="t">回到日常语言</span>
-    <span class="d">把 Agda 的视角带回 TypeScript、Rust、Haskell 和 C++。</span>
+    <span class="d">把 Agda 的视角带回 TypeScript、Rust、Haskell、C++ 和 Python。</span>
   </a>
 </div>
 

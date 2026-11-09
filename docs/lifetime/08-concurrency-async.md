@@ -141,7 +141,7 @@ public:
 
 `wp.lock()` 返回一个 `shared_ptr`：如果对象还活着，它保证在 `self` 的作用域内对象不会被销毁；如果已经销毁，返回空指针，线程安静退出。**关键在于 `lock()` 之后要一直用 `self`，不能用回 `this`**——否则在 `lock()` 到使用之间对象仍可能被销毁。
 
-`enable_shared_from_this` 有一个硬性前提：对象必须已经由 `shared_ptr` 拥有。如果 `Downloader` 是栈对象，`weak_from_this()` 返回空的 `weak_ptr`，`lock()` 永远失败；调用 `shared_from_this()` 则抛 `std::bad_weak_ptr`。这不是一个"有时候能用"的接口：用错了，它会安静地什么都不做，不报错。
+`enable_shared_from_this` 有一个硬性前提：对象必须已经由 `shared_ptr` 拥有。如果 `Downloader` 是栈对象，`weak_from_this()` 返回空的 `weak_ptr`，`lock()` 永远失败；调用 `shared_from_this()` 则抛 `std::bad_weak_ptr`。这不是一个"有时候能用"的接口：用错了，要么抛 `std::bad_weak_ptr`，要么安静地返回空 `weak_ptr`。
 
 修法二：显式生命周期令牌。一个 `shared_ptr<Control>`，线程持有一份，析构时把 `*alive = false`，线程在每次迭代检查它。适合"任务由外部驱动、需要立即停止"的场景。
 
